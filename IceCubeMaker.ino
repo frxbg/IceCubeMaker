@@ -11,7 +11,7 @@
 #define K2Led       2 // ***    2
 #define K1Led       3 //        3
 #define K3Led       4 // CN2    4
-#define Led2Anode   5 //        5
+#define Led3Anode   5 //        5
 #define Led124Anode 6 // ***    6
 #define WaterLevel A1 // CN1   (S3C9454B/F9454B) PIN 16
 #define ReedSensor A2 // CN3   (S3C9454B/F9454B) PIN 19
@@ -71,7 +71,7 @@ void setup() {
   Serial.println(F("Setup"));        // Само за дебъг
    // Задаваме постоянните изходни пинове
   pinMode(Led124Anode, OUTPUT);
-  pinMode(Led2Anode, OUTPUT);
+  pinMode(Led3Anode, OUTPUT);
   pinMode(Fan, OUTPUT);
   pinMode(Compressor, OUTPUT);
   pinMode(Buzzer, OUTPUT);
@@ -129,11 +129,11 @@ void loop() {
   // *********************************************************************
   if (Running == 0) {
     pinMode(K1Led, INPUT_PULLUP);
-    digitalWrite(Led2Anode, LOW);
+    digitalWrite(Led3Anode, LOW);
     digitalWrite(Led124Anode, LOW);
     K1Time = millis() + 500;
     while (digitalRead (K1Led) == LOW) { // && digitalRead(WaterLevel) == HIGH && digitalRead(ReedSensor) == HIGH) {
-      Serial.println(digitalRead (K1Led)); // only for examples  pinMode(Led2Anode, OUTPUT);
+      Serial.println(digitalRead (K1Led)); // only for examples  pinMode(Led3Anode, OUTPUT);
       if (millis() >= K1Time) {
         TimeWater = millis() + 2000;
         state1 = 0;
@@ -147,11 +147,11 @@ void loop() {
         digitalWrite(K1Led, LOW);       //
         digitalWrite(K2Led, LOW);       //
         digitalWrite(K3Led, LOW);       //  Обратна връзка чрез светване на всичките светодиоди
-        digitalWrite(Led2Anode, HIGH);  //
+        digitalWrite(Led3Anode, HIGH);  //
         digitalWrite(Led124Anode, HIGH);//
         Serial.println(F("sleepNow"));  //
         delay(1000);                    //
-        digitalWrite(Led2Anode, LOW);
+        digitalWrite(Led3Anode, LOW);
         digitalWrite(Led124Anode, LOW);
         pinMode(K1Led, INPUT_PULLUP);
         pinMode(K2Led, INPUT_PULLUP);
@@ -168,7 +168,7 @@ void loop() {
     digitalWrite(HotGas, LOW);
     digitalWrite(WaterPump, LOW);
     pinMode(K2Led, INPUT_PULLUP);
-    digitalWrite(Led2Anode, LOW);
+    digitalWrite(Led3Anode, LOW);
     digitalWrite(Led124Anode, LOW);
     K2Time = millis() + 500;
     while (digitalRead(K2Led) == LOW) {
@@ -191,7 +191,7 @@ void loop() {
   // *********************************************************************
   if (Running == 0) {
     pinMode(K3Led, INPUT_PULLUP);
-    digitalWrite(Led2Anode, LOW);
+    digitalWrite(Led3Anode, LOW);
     digitalWrite(Led124Anode, LOW);
     K3Time = millis() + 1500;
     while (digitalRead(K3Led) == LOW) {
@@ -203,11 +203,11 @@ void loop() {
         digitalWrite(K1Led, LOW);
         digitalWrite(K2Led, LOW);
         digitalWrite(K3Led, LOW);
-        digitalWrite(Led2Anode, HIGH);
+        digitalWrite(Led3Anode, HIGH);
         digitalWrite(Led124Anode, HIGH);
         Serial.println(F("sleepNow")); 
         delay(1000);
-        digitalWrite(Led2Anode, LOW);
+        digitalWrite(Led3Anode, LOW);
         digitalWrite(Led124Anode, LOW);
         pinMode(K1Led, INPUT_PULLUP);
         pinMode(K2Led, INPUT_PULLUP);
@@ -222,17 +222,17 @@ void loop() {
   currentMillis = millis();
   if (currentMillis - TimerOff > 600000) {
     TimerOff = currentMillis;
-    Serial.println(F("sleepNow")); // only for examples  pinMode(Led2Anode, OUTPUT);
+    Serial.println(F("sleepNow")); // only for examples  pinMode(Led3Anode, OUTPUT);
     pinMode(K1Led, OUTPUT);
     pinMode(K2Led, OUTPUT);
     pinMode(K3Led, OUTPUT);
     digitalWrite(K1Led, LOW);
     digitalWrite(K2Led, LOW);
     digitalWrite(K3Led, LOW);
-    digitalWrite(Led2Anode, HIGH);
+    digitalWrite(Led3Anode, HIGH);
     digitalWrite(Led124Anode, HIGH);
     delay(1000);
-    digitalWrite(Led2Anode, LOW);
+    digitalWrite(Led3Anode, LOW);
     digitalWrite(Led124Anode, LOW);
     pinMode(K1Led, INPUT_PULLUP);
     pinMode(K2Led, INPUT_PULLUP);
@@ -322,10 +322,10 @@ void Run() {
         digitalWrite(K1Led, LOW);
         digitalWrite(K2Led, LOW);
         digitalWrite(K3Led, LOW);
-        digitalWrite(Led2Anode, HIGH);
+        digitalWrite(Led3Anode, HIGH);
         digitalWrite(Led124Anode, HIGH);
         delay(1000);
-        digitalWrite(Led2Anode, LOW);
+        digitalWrite(Led3Anode, LOW);
         digitalWrite(Led124Anode, LOW);
         pinMode(K1Led, INPUT_PULLUP);
         pinMode(K2Led, INPUT_PULLUP);
@@ -353,7 +353,7 @@ void Startup() {
     pinMode(K1Led, OUTPUT);
     pinMode(K2Led, OUTPUT);
     pinMode(K3Led, OUTPUT);
-    digitalWrite(Led2Anode, HIGH);
+    digitalWrite(Led3Anode, HIGH);
     digitalWrite(Led124Anode, HIGH);
 
     unsigned long previousMillis;
@@ -408,7 +408,7 @@ void Select() {
     }
   }
   pinMode(K2Led, INPUT_PULLUP);
-  digitalWrite(Led2Anode, LOW);
+  digitalWrite(Led3Anode, LOW);
   digitalWrite(Led124Anode, LOW);
   if (digitalRead(K2Led) == LOW) {
     Serial.print(F("K2Led  LOW"));
@@ -435,7 +435,7 @@ void GetTemp() {
 // WaterAlarm
 // *********************************************************************
 void WaterAlarm() {
-  Serial.println(F("WaterAlarm")); // only for examples  pinMode(Led2Anode, OUTPUT);
+  Serial.println(F("WaterAlarm")); // only for examples  pinMode(Led3Anode, OUTPUT);
   int WAlarm = LOW;
   pinMode(K1Led, OUTPUT);
   pinMode(K2Led, OUTPUT);
@@ -470,9 +470,8 @@ void UpdateLeds() {
     digitalWrite(K1Led, LOW);
   }
   else if (Selected == 0) {
-    digitalWrite(Led2Anode, HIGH);
+    digitalWrite(Led3Anode, HIGH);
     pinMode(K2Led, OUTPUT);
     digitalWrite(K2Led, LOW);
   }
 }
-
