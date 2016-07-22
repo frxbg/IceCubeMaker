@@ -8,37 +8,34 @@
 
 // Дефинираме входно/изходните пинове
 
-#define K2Led       2 // ***    2
-#define K1Led       3 //        3
-#define K3Led       4 // CN2    4
-#define Led3Anode   5 //        5
-#define Led124Anode 6 // ***    6
-#define WaterLevel A1 // CN1   (S3C9454B/F9454B) PIN 16
-#define ReedSensor A2 // CN3   (S3C9454B/F9454B) PIN 19
-#define NTCPin     A3 // CN4   (S3C9454B/F9454B) PIN 18
-#define Fan         7 // CN7   (S3C9454B/F9454B) PIN 9
-#define Compressor 10 // COM 1 (S3C9454B/F9454B) PIN 3
-#define Buzzer     11 //       (S3C9454B/F9454B) PIN 5
-#define HotGas     12 // COM 2 (S3C9454B/F9454B) PIN 6
-#define WaterPump  13 // COM 3 (S3C9454B/F9454B) PIN 7
+#define K2Led        2 // ***    2
+#define K1Led        3 //        3
+#define K3Led        4 // CN2    4
+#define Led3Anode    5 //        5
+#define Led124Anode  6 // ***    6
+#define WaterLevel  A1 // CN1   (S3C9454B/F9454B) PIN 16
+#define ReedSensor  A2 // CN3   (S3C9454B/F9454B) PIN 19
+#define NTCPin      A3 // CN4   (S3C9454B/F9454B) PIN 18
+#define Fan          7 // CN7   (S3C9454B/F9454B) PIN 9
+#define Compressor  10 // COM 1 (S3C9454B/F9454B) PIN 3
+#define Buzzer      11 //       (S3C9454B/F9454B) PIN 5
+#define HotGas      12 // COM 2 (S3C9454B/F9454B) PIN 6
+#define WaterPump   13 // COM 3 (S3C9454B/F9454B) PIN 7
 
-
+// Дефинираме променливите
 byte FirstStart;
 byte Running;
 byte WaterErr;
+byte FillUp;
 byte state1;
 byte state2;
 byte state3;
 byte state4;
 
-
-int buttonState;
-int OutTemp;
+double OutTemp;
 int Selected;
 
-long lastDebounceTime = 0;
-long debounceDelay = 5;
-
+// Дефинираме времевите променливи
 unsigned long Time1;
 unsigned long Time2;
 unsigned long K1Time;
@@ -69,7 +66,7 @@ void setup() {
   while (!Serial);                   // Изчакваме докато е готова
   Serial.begin(115000);              // Стартирай
   Serial.println(F("Setup"));        // Само за дебъг
-   // Задаваме постоянните изходни пинове
+  // Задаваме постоянните изходни пинове
   pinMode(Led124Anode, OUTPUT);
   pinMode(Led3Anode, OUTPUT);
   pinMode(Fan, OUTPUT);
@@ -77,10 +74,13 @@ void setup() {
   pinMode(Buzzer, OUTPUT);
   pinMode(HotGas, OUTPUT);
   pinMode(WaterPump, OUTPUT);
+  digitalWrite(Compressor, LOW);
+  digitalWrite(HotGas, LOW);
+  digitalWrite(WaterPump, LOW);
+  digitalWrite(Fan, LOW);
   // Задаваме постоянните входни пинове
-  pinMode(WaterLevel, INPUT_PULLUP);
-  pinMode(ReedSensor, INPUT_PULLUP);
-  // attachInterrupt(0, wakeUpNow, LOW);
+  pinMode(WaterLevel, INPUT);
+  pinMode(ReedSensor, INPUT);
   Selected = 1;
   FirstStart = 1;
   TimerOff = currentMillis;
@@ -122,7 +122,7 @@ void loop() {
   if (Running == 1) { // Ако е пусната програмата премини към нея
     Run();
   }
-  if (WaterErr == 1) { // Ако е ниско нивото на водата
+  if (WaterErr == 1) { // Аларма ако е ниско нивото на водата
     WaterAlarm();
   }
 
@@ -133,7 +133,7 @@ void loop() {
     digitalWrite(Led124Anode, LOW);
     K1Time = millis() + 500;
     while (digitalRead (K1Led) == LOW) { // && digitalRead(WaterLevel) == HIGH && digitalRead(ReedSensor) == HIGH) {
-      Serial.println(digitalRead (K1Led)); // only for examples  pinMode(Led3Anode, OUTPUT);
+      Serial.println(digitalRead (K1Led));
       if (millis() >= K1Time) {
         TimeWater = millis() + 2000;
         state1 = 0;
@@ -141,7 +141,7 @@ void loop() {
         state3 = 0;
         state4 = 0;
         Running = 1;
-        pinMode(K1Led, OUTPUT);         //   
+        pinMode(K1Led, OUTPUT);         //
         pinMode(K2Led, OUTPUT);         //
         pinMode(K3Led, OUTPUT);         //
         digitalWrite(K1Led, LOW);       //
@@ -167,12 +167,13 @@ void loop() {
     digitalWrite(Compressor, LOW);
     digitalWrite(HotGas, LOW);
     digitalWrite(WaterPump, LOW);
+    digitalWrite(Fan, LOW);
     pinMode(K2Led, INPUT_PULLUP);
     digitalWrite(Led3Anode, LOW);
     digitalWrite(Led124Anode, LOW);
     K2Time = millis() + 500;
     while (digitalRead(K2Led) == LOW) {
-      Serial.println(digitalRead (K2Led)); 
+      Serial.println(digitalRead (K2Led));
       if (millis() >= K2Time) {
         if (Selected == 1) {
           Selected = 0;
@@ -180,7 +181,6 @@ void loop() {
         else if (Selected == 0) {
           Selected = 1;
         }
-        GetTemp();
         Select();
         break;
       }
@@ -195,18 +195,18 @@ void loop() {
     digitalWrite(Led124Anode, LOW);
     K3Time = millis() + 1500;
     while (digitalRead(K3Led) == LOW) {
-      Serial.println(digitalRead (K3Led)); 
+      Serial.println(digitalRead (K3Led));
       if (millis() >= K3Time) {
-        pinMode(K1Led, OUTPUT);
-        pinMode(K2Led, OUTPUT);
-        pinMode(K3Led, OUTPUT);
-        digitalWrite(K1Led, LOW);
-        digitalWrite(K2Led, LOW);
-        digitalWrite(K3Led, LOW);
-        digitalWrite(Led3Anode, HIGH);
-        digitalWrite(Led124Anode, HIGH);
-        Serial.println(F("sleepNow")); 
-        delay(1000);
+        pinMode(K1Led, OUTPUT);         //
+        pinMode(K2Led, OUTPUT);         //
+        pinMode(K3Led, OUTPUT);         //
+        digitalWrite(K1Led, LOW);       //
+        digitalWrite(K2Led, LOW);       //
+        digitalWrite(K3Led, LOW);       //  Обратна връзка чрез светване на всичките светодиоди
+        digitalWrite(Led3Anode, HIGH);  //
+        digitalWrite(Led124Anode, HIGH);//
+        Serial.println(F("sleepNow"));  //
+        delay(1000);                    //
         digitalWrite(Led3Anode, LOW);
         digitalWrite(Led124Anode, LOW);
         pinMode(K1Led, INPUT_PULLUP);
@@ -222,7 +222,7 @@ void loop() {
   currentMillis = millis();
   if (currentMillis - TimerOff > 600000) {
     TimerOff = currentMillis;
-    Serial.println(F("sleepNow")); // only for examples  pinMode(Led3Anode, OUTPUT);
+    Serial.println(F("sleepNow"));
     pinMode(K1Led, OUTPUT);
     pinMode(K2Led, OUTPUT);
     pinMode(K3Led, OUTPUT);
@@ -240,16 +240,11 @@ void loop() {
     sleepNow();
   }
   // *********************************************************************
-  if (digitalRead(WaterLevel) == LOW) {
-    if (millis() - TimeWater > 300000) {
-      TimeWater = millis();
+  //pinMode(WaterLevel, INPUT);
+  if (digitalRead(WaterLevel) == HIGH) {
+    TimeWater = millis() + 3000;
+    if (millis() < TimeWater) {
       WaterErr = 1;
-    }
-  }
-  else if (digitalRead(WaterLevel) == HIGH && WaterErr == 1) {
-    if (millis() - TimeWater > 5000) {
-      TimeWater = millis();
-      WaterErr = 0;
     }
   }
   UpdateLeds();
@@ -258,13 +253,13 @@ void loop() {
 // Run
 // *********************************************************************
 void Run() {
-  Serial.println(F("Run")); 
+  // Serial.println(F("Run"));
   UpdateLeds();
   currentMillis = millis();
 
   if (state1 == 0) { //Стъпка 1
     digitalWrite(WaterPump, HIGH); //Включваме водната помпа
-    Serial.println(currentMillis - TimeWater); //
+    Serial.println((TimeWater + 60000) - currentMillis); //
     if (currentMillis >= TimeWater + 60000) {
       state1 = 1;
       Serial.println(F("TimeWater finish")); //
@@ -275,7 +270,7 @@ void Run() {
   if (state2 == 0 && state1 == 1) { //Стъпка 2
     digitalWrite(Compressor, HIGH); //Включваме компресора
     digitalWrite(HotGas, HIGH); //Включваме горещите пари
-    Serial.println(currentMillis - TimerHotGas); //
+    Serial.println((TimerHotGas + 60000) - currentMillis); //
     if (currentMillis >= TimerHotGas + 60000) {
       digitalWrite(HotGas, LOW); //Изключваме горещите пари след изминалото време
       state2 = 1;
@@ -286,7 +281,24 @@ void Run() {
   }
   if (state3 == 0 && state2 == 1 && state1 == 1) { //Стъпка 3
     digitalWrite(Fan, HIGH); //Всключваме вентилатора на кондензатора
-    Serial.println(currentMillis - WorkingTime); //
+    GetTemp();
+    if (Selected == 1) {
+      if (OutTemp >= 23) {
+        ProgramTime = 5400000;
+      }
+      if (OutTemp < 23) {
+        ProgramTime = 4500000;
+      }
+    }
+    else if (Selected == 0) {
+      if (OutTemp >= 23) {
+        ProgramTime = 4500000;
+      }
+      if (OutTemp < 23) {
+        ProgramTime = 3600000;
+      }
+    }
+    Serial.println((WorkingTime + ProgramTime) - currentMillis); //
     if (currentMillis >= WorkingTime + ProgramTime) {
       state3 = 1;
       Serial.println(F("WorkingTime finish")); //
@@ -297,24 +309,32 @@ void Run() {
   }
   if (state4 == 0 && state3 == 1 && state2 == 1 && state1 == 1) { //Стъпка 4
     digitalWrite(HotGas, HIGH); //Включваме горещите пари за да отделим леда
-    Serial.println(currentMillis - DefrostTime); //
-    if (currentMillis >= DefrostTime + 60000) {
+    Serial.println((DefrostTime + 120000) - currentMillis); //
+    if (currentMillis >= DefrostTime + 120000) {
       state4 = 1;
       Serial.println(F("DefrostTime finish")); //
-      // Край на програмата изключваме всички компоненти 
+      // Край на програмата изключваме всички компоненти
       digitalWrite(Compressor, LOW);
       digitalWrite(HotGas, LOW);
       digitalWrite(Fan, LOW);
       Running = 0;
       TimerOff = currentMillis;
-    } 
+    }
+  }
+  //pinMode(WaterLevel, INPUT);
+  if (digitalRead(WaterLevel) == HIGH) {
+    TimeWater = millis() + 3000;
+    if (millis() < TimeWater) {
+      WaterErr = 1;
+      WaterAlarm();
+    }
   }
   if (Running == 1) {
     pinMode(K3Led, INPUT_PULLUP);
     digitalWrite(Led124Anode, LOW);
     K3Time = millis() + 2000;
     while (digitalRead(K3Led) == LOW) {
-      Serial.println(digitalRead (K3Led)); 
+      Serial.println(digitalRead (K3Led));
       if (millis() >= K3Time) {
         pinMode(K1Led, OUTPUT);
         pinMode(K2Led, OUTPUT);
@@ -346,7 +366,7 @@ void Run() {
 // Startup
 // *********************************************************************
 void Startup() {
-  Serial.println(F("Startup")); 
+  Serial.println(F("Startup"));
   Time1 = millis() + 6000;
   int Startup = LOW;
   while (millis() < Time1) {
@@ -377,6 +397,7 @@ void Startup() {
       digitalWrite(K3Led, Startup);
       if (millis() >= Time1) {
         delay(1000);
+        Running = 0;
         FirstStart = 0;
         Select();
         TimerOff = currentMillis;
@@ -389,24 +410,9 @@ void Startup() {
 // Select
 // *********************************************************************
 void Select() {
+  GetTemp();
   Serial.println(F("Select")); //
   // Избираме режима на работа
-  if (Selected == 1) {
-    if (OutTemp >= 23) {
-      ProgramTime = 480000;
-    }
-    if (OutTemp < 23) {
-      ProgramTime = 360000;
-    }
-  }
-  else if (Selected == 0) {
-    if (OutTemp >= 23) {
-      ProgramTime = 360000;
-    }
-    if (OutTemp < 23) {
-      ProgramTime = 270000;
-    }
-  }
   pinMode(K2Led, INPUT_PULLUP);
   digitalWrite(Led3Anode, LOW);
   digitalWrite(Led124Anode, LOW);
@@ -421,7 +427,7 @@ void Select() {
 // GetTemp
 // *********************************************************************
 void GetTemp() {
-// Получаване на температура от външния датчик
+  // Получаване на температура от външния датчик
   int RawADC;
   RawADC = analogRead(NTCPin);
   double Temp;
@@ -435,35 +441,56 @@ void GetTemp() {
 // WaterAlarm
 // *********************************************************************
 void WaterAlarm() {
-  Serial.println(F("WaterAlarm")); // only for examples  pinMode(Led3Anode, OUTPUT);
+  // Serial.println(F("WaterAlarm"));
   int WAlarm = LOW;
+  digitalWrite(Led124Anode, HIGH);
   pinMode(K1Led, OUTPUT);
   pinMode(K2Led, OUTPUT);
   pinMode(K3Led, OUTPUT);
   digitalWrite(K1Led, HIGH);
   digitalWrite(K2Led, HIGH);
   digitalWrite(K3Led, HIGH);
-  unsigned long AlarmMillis;
-  if (AlarmMillis - Time2 > 1000) {
-    if (WAlarm == LOW) {
-      WAlarm = HIGH;
-    } else {
-      WAlarm = LOW;
+  Time2 = millis() + 600000;
+  while (millis() < Time2) {
+
+    unsigned long previousMillis;
+    currentMillis = millis();
+
+    if (currentMillis - previousMillis >= 1000) {
+      // Запази последното време когато диода е мигал
+      previousMillis = currentMillis;
+
+      if (WAlarm == LOW) {
+        WAlarm = HIGH;
+        analogWrite(Buzzer, 220);
+      } else {
+        WAlarm = LOW;
+        analogWrite(Buzzer, 0);
+      }
+      Running = 0;
+      pinMode(K3Led, OUTPUT);
+      digitalWrite(K3Led, WAlarm);
+      if (millis() > Time2) {
+        sleepNow();
+      }
+      if (digitalRead(WaterLevel) == LOW) {
+        analogWrite(Buzzer, 0);
+        delay(2000);
+        WaterErr = 0;
+        FillUp = 0;
+        break;
+      }
     }
-    Running = 0;
-    analogWrite(Buzzer, 170);
-    pinMode(K3Led, OUTPUT);
-    digitalWrite(K3Led, WAlarm);
-    Time2 = AlarmMillis;
   }
   TimerOff = currentMillis;
+  setup();
 }
 
 // *********************************************************************
 // UpdateLeds
 // *********************************************************************
 void UpdateLeds() {
-  Serial.println(F("UpdateLeds"));
+  // Serial.println(F("UpdateLeds"));
   if (Selected == 1) {
     digitalWrite(Led124Anode, HIGH);
     pinMode(K1Led, OUTPUT);
