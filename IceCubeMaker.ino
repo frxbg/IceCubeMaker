@@ -23,16 +23,16 @@
 #define WaterPump   13 // COM 3 (S3C9454B/F9454B) PIN 7
 
 // Дефинираме променливите
-byte FirstStart;
-byte Running;
-byte WaterErr;
-byte FillUp;
-byte state1;
-byte state2;
-byte state3;
-byte state4;
+boolean FirstStart;
+boolean Running;
+boolean WaterErr;
+boolean FillUp;
+boolean state1;
+boolean state2;
+boolean state3;
+boolean state4;
 
-double OutTemp;
+int OutTemp;
 int Selected;
 
 // Дефинираме времевите променливи
@@ -478,12 +478,11 @@ void WaterAlarm() {
         delay(2000);
         WaterErr = 0;
         FillUp = 0;
-        break;
+        setup();
       }
     }
   }
   TimerOff = currentMillis;
-  setup();
 }
 
 // *********************************************************************
