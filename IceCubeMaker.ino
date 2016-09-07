@@ -526,7 +526,7 @@ void IceFull() {
     unsigned long previousMillis;
     currentMillis = millis();
 
-    if (currentMillis - previousMillis >= 1000) {
+    if (currentMillis - previousMillis >= 750) {
       // Запази последното време когато диода е мигал
       previousMillis = currentMillis;
 
@@ -545,6 +545,7 @@ void IceFull() {
         analogWrite(Buzzer, 0);
         delay(2000);
         IceLevel = 0;
+        break;
       }
     }
   }
