@@ -371,6 +371,12 @@ void Run() {
       }
     }
   }
+  if (digitalRead(ReedSensor) == HIGH && Running <= 4) {
+    TimeIce = millis() + 3000;
+    if (millis() < TimeIce) {
+      Running = 4;
+    }
+  }
   if (Running <= 4) {
     Run();
   }
