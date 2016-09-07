@@ -23,7 +23,7 @@
 #define WaterPump   13 // COM 3 (S3C9454B/F9454B) PIN 7
 
 // Дефинираме променливите
-byte Running;
+uint8 Running;
 boolean FirstStart;
 boolean WaterErr;
 boolean FillUp;
