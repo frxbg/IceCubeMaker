@@ -120,7 +120,7 @@ void loop() {
   if (FirstStart == 1) { //Ако е първо стартиране премини към изчакване
     Startup();
   }
-  if (Running < 1) { // Ако е пусната програмата премини към нея
+  if (Running > 0) { // Ако е пусната програмата премини към нея
     Run();
   }
   if (WaterErr == 1) { // Аларма ако е ниско нивото на водата
@@ -318,7 +318,7 @@ void Run() {
       digitalWrite(Compressor, LOW);
       digitalWrite(HotGas, LOW);
       digitalWrite(Fan, LOW);
-      if (Running < 4) {
+      if (Running <= 4) {
         Running = Running + 1;
       }
       TimerOff = currentMillis;
@@ -332,7 +332,7 @@ void Run() {
       WaterAlarm();
     }
   }
-  if (Running < 4) {
+  if (Running > 0) {
     pinMode(K3Led, INPUT_PULLUP);
     digitalWrite(Led124Anode, LOW);
     K3Time = millis() + 2000;
@@ -359,8 +359,11 @@ void Run() {
       }
     }
   }
-  if (Running < 4) {
+  if (Running <= 4) {
     Run();
+  }
+  else if (Running >= 5){
+    Running = 0;
   }
 }
 
