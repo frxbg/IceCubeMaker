@@ -23,8 +23,8 @@
 #define WaterPump   13 // COM 3 (S3C9454B/F9454B) PIN 7
 
 // Дефинираме променливите
+byte Running;
 boolean FirstStart;
-boolean Running;
 boolean WaterErr;
 boolean FillUp;
 boolean state1;
@@ -92,6 +92,7 @@ void setup() {
 // *********************************************************************
 void sleepNow()         // Тук изключваме adrduino
 {
+  pinMode(K2Led, INPUT_PULLUP);
   set_sleep_mode(SLEEP_MODE_PWR_DOWN);   // Режима на заспиване
 
   sleep_enable();          // Задава заспиването в mcucr register
@@ -119,7 +120,7 @@ void loop() {
   if (FirstStart == 1) { //Ако е първо стартиране премини към изчакване
     Startup();
   }
-  if (Running == 1) { // Ако е пусната програмата премини към нея
+  if (Running < 1) { // Ако е пусната програмата премини към нея
     Run();
   }
   if (WaterErr == 1) { // Аларма ако е ниско нивото на водата
@@ -317,7 +318,9 @@ void Run() {
       digitalWrite(Compressor, LOW);
       digitalWrite(HotGas, LOW);
       digitalWrite(Fan, LOW);
-      Running = 0;
+      if (Running < 4) {
+        Running = Running + 1;
+      }
       TimerOff = currentMillis;
     }
   }
@@ -329,7 +332,7 @@ void Run() {
       WaterAlarm();
     }
   }
-  if (Running == 1) {
+  if (Running < 4) {
     pinMode(K3Led, INPUT_PULLUP);
     digitalWrite(Led124Anode, LOW);
     K3Time = millis() + 2000;
@@ -356,7 +359,7 @@ void Run() {
       }
     }
   }
-  if (Running == 1) {
+  if (Running < 4) {
     Run();
   }
 }
@@ -396,11 +399,11 @@ void Startup() {
       digitalWrite(K2Led, Startup);
       digitalWrite(K3Led, Startup);
       if (millis() >= Time1) {
-        delay(1000);
         Running = 0;
         FirstStart = 0;
-        Select();
+        delay(1000);
         TimerOff = currentMillis;
+        Select();
       }
     }
   }
@@ -482,7 +485,6 @@ void WaterAlarm() {
       }
     }
   }
-  TimerOff = currentMillis;
 }
 
 // *********************************************************************
