@@ -26,6 +26,7 @@
 byte Running;
 boolean FirstStart;
 boolean WaterErr;
+boolean IceLevel;
 boolean FillUp;
 boolean state1;
 boolean state2;
@@ -38,6 +39,7 @@ int Selected;
 // Дефинираме времевите променливи
 unsigned long Time1;
 unsigned long Time2;
+unsigned long Time3;
 unsigned long K1Time;
 unsigned long K2Time;
 unsigned long K3Time;
@@ -49,6 +51,7 @@ unsigned long WorkingTime;
 unsigned long DefrostTime;
 unsigned long ProgramTime;
 unsigned long WaterAlarmDelay;
+unsigned long TimeIce;
 
 
 
@@ -125,6 +128,9 @@ void loop() {
   }
   if (WaterErr == 1) { // Аларма ако е ниско нивото на водата
     WaterAlarm();
+  }
+  if (IceLevel == 1) { // Аларма ако е ниско нивото на водата
+    IceFull();
   }
 
   // *********************************************************************
@@ -248,6 +254,12 @@ void loop() {
       WaterErr = 1;
     }
   }
+  if (digitalRead(ReedSensor) == HIGH) {
+    TimeIce = millis() + 3000;
+    if (millis() < TimeIce) {
+      IceLevel = 1;
+    }
+  }
   UpdateLeds();
 }
 // *********************************************************************
@@ -362,7 +374,7 @@ void Run() {
   if (Running <= 4) {
     Run();
   }
-  else if (Running >= 5){
+  else if (Running >= 5) {
     Running = 0;
   }
 }
@@ -485,6 +497,54 @@ void WaterAlarm() {
         WaterErr = 0;
         FillUp = 0;
         setup();
+      }
+    }
+  }
+}
+
+// *********************************************************************
+// WaterAlarm
+// *********************************************************************
+
+void IceFull() {
+
+
+  int IceAlarm = LOW;
+  digitalWrite(Led124Anode, HIGH);
+  pinMode(K1Led, OUTPUT);
+  pinMode(K2Led, OUTPUT);
+  pinMode(K3Led, OUTPUT);
+  digitalWrite(K1Led, HIGH);
+  digitalWrite(K2Led, HIGH);
+  digitalWrite(K3Led, HIGH);
+  Time3 = millis() + 600000;
+  analogWrite(Buzzer, 240);
+  delay(2000);
+  while (millis() < Time3) {
+    analogWrite(Buzzer, 0);
+
+    unsigned long previousMillis;
+    currentMillis = millis();
+
+    if (currentMillis - previousMillis >= 1000) {
+      // Запази последното време когато диода е мигал
+      previousMillis = currentMillis;
+
+      if (IceAlarm == LOW) {
+        IceAlarm = HIGH;
+      } else {
+        IceAlarm = LOW;
+      }
+      Running = 0;
+      pinMode(K1Led, OUTPUT);
+      digitalWrite(K1Led, IceAlarm);
+      if (millis() > Time3) {
+        sleepNow();
+      }
+      if (digitalRead(ReedSensor) == LOW) {
+        analogWrite(Buzzer, 0);
+        delay(2000);
+        IceLevel = 0;
       }
     }
   }
